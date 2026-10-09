@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tesla Custom Wraps 预览 · 特斯拉车身贴膜</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #0c0c0e 0%, #1a1a24 50%, #0c0c0e 100%);
+    color: #e8e8ed;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  header {
+    text-align: center;
+    max-width: 1200px;
+    margin: 0 auto 32px;
+  }
+  header h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #e82127 0%, #ff6b6b 50%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  header p {
+    color: #9a9aa8;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .badges {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    background: rgba(232, 33, 39, 0.12);
+    border: 1px solid rgba(232, 33, 39, 0.3);
+    color: #ff6b6b;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+  }
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 900px) {
+    .container { grid-template-columns: 1fr; }
+  }
+  .sidebar {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 20px;
+    height: fit-content;
+    position: sticky;
+    top: 24px;
+  }
+  .sidebar h3 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #9a9aa8;
+    margin-bottom: 12px;
+  }
+  .car-list { list-style: none; }
+  .car-item {
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .car-item:hover {
+    background: rgba(255,255,255,0.06);
+  }
+  .car-item.active {
+    background: rgba(232, 33, 39, 0.15);
+    border-color: rgba(232, 33, 39, 0.4);
+    color: #ff6b6b;
+  }
+  .car-item .thumb {
+    width: 36px;
+    height: 24px;
+    object-fit: cover;
+    border-radius: 4px;
+    background: #222;
+  }
+  .main {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 28px;
+    min-height: 600px;
+  }
+  .car-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .car-title {
+    font-size: 1.6rem;
+    font-weight: 600;
+  }
+  .car-actions a {
+    color: #fff;
+    background: #e82127;
+    padding: 8px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background 0.2s;
+    margin-left: 8px;
+  }
+  .car-actions a:hover { background: #c9191e; }
+  .car-actions a.secondary {
+    background: rgba(255,255,255,0.08);
+  }
+  .car-actions a.secondary:hover { background: rgba(255,255,255,0.14); }
+
+  .preview-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 700px) {
+    .preview-section { grid-template-columns: 1fr; }
+  }
+  .preview-box {
+    background: rgba(0,0,0,0.3);
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .preview-box .label {
+    font-size: 0.8rem;
+    color: #9a9aa8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .vehicle-preview {
+    width: 100%;
+    aspect-ratio: 4/2.5;
+    background: radial-gradient(ellipse at center, #2a2a38 0%, #0a0a0f 80%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .vehicle-preview img {
+    max-width: 92%;
+    max-height: 92%;
+    object-fit: contain;
+    position: relative;
+    z-index: 2;
+    transition: transform 0.3s;
+  }
+  .wrap-canvas-wrap {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .wrap-layer {
+    position: relative;
+    width: 200px;
+    aspect-ratio: 1;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid #333;
+  }
+  .wrap-layer.base-img {
+    width: 200px;
+  }
+  .wrap-layer img.base {
+    width: 100%; height: 100%; object-fit: contain; display: block;
+  }
+  .wrap-overlay {
+    position: absolute;
+    inset: 0;
+    mix-blend-mode: multiply;
+    opacity: 1;
+  }
+  .wrap-overlay img {
+    width: 100%; height: 100%; object-fit: contain;
+  }
+  .arrow {
+    font-size: 1.6rem;
+    color: #555;
+  }
+  .wrap-name {
+    margin-top: 10px;
+    font-size: 0.95rem;
+    color: #ccc;
+    font-weight: 500;
+  }
+
+  .gallery h3 {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    color: #ddd;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .gallery h3 .count {
+    font-size: 0.8rem;
+    color: #9a9aa8;
+    font-weight: normal;
+  }
+  .wrap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+  }
+  .wrap-card {
+    background: rgba(255,255,255,0.03);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .wrap-card:hover {
+    background: rgba(255,255,255,0.07);
+    transform: translateY(-2px);
+  }
+  .wrap-card.active {
+    border-color: #e82127;
+    background: rgba(232,33,39,0.08);
+  }
+  .wrap-thumb {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 6px;
+    background: #fff;
+    image-rendering: -webkit-optimize-contrast;
+  }
+  .wrap-card .name {
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: #c0c0c8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .usage-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .usage-section h3 {
+    font-size: 1.15rem;
+    margin-bottom: 16px;
+  }
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+  }
+  .step {
+    background: rgba(255,255,255,0.03);
+    padding: 16px;
+    border-radius: 12px;
+    border-left: 3px solid #e82127;
+  }
+  .step-num {
+    font-size: 0.75rem;
+    color: #e82127;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .step-text {
+    margin-top: 6px;
+    font-size: 0.92rem;
+    color: #ccc;
+    line-height: 1.5;
+  }
+
+  .requirements {
+    margin-top: 20px;
+    background: rgba(255,255,255,0.03);
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: #b0b0ba;
+  }
+  .requirements strong { color: #fff; }
+
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    color: #666;
+    font-size: 0.85rem;
+  }
+  footer a { color: #e82127; text-decoration: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Tesla Custom Wraps Gallery</h1>
+  <p>为你的特斯拉车辆创建独一无二的自定义涂装。本仓库提供各车型的 UV 贴图模板与官方示例，下载模板后在手机 app 或 USB 导入，即可在车机 <b style="color:#fff">Toybox → Paint Shop</b> 中应用。</p>
+  <div class="badges">
+    <span class="badge">🚗 12 款车型</span>
+    <span class="badge">🎨 257+ 示例涂装</span>
+    <span class="badge">📐 UV 模板 PNG</span>
+    <span class="badge">⚡ Paint Shop</span>
+  </div>
+</header>
+
+<div class="container">
+  <aside class="sidebar">
+    <h3>选择车型</h3>
+    <ul class="car-list" id="carList"></ul>
+  </aside>
+
+  <main class="main">
+    <div class="car-header">
+      <div class="car-title" id="carTitle">—</div>
+      <div class="car-actions">
+        <a id="downloadTpl" class="secondary" href="#" download>下载模板</a>
+        <a id="viewFolder" href="#" target="_blank">查看目录</a>
+      </div>
+    </div>
+
+    <div class="preview-section">
+      <div class="preview-box">
+        <div class="label">车辆外观预览</div>
+        <div class="vehicle-preview">
+          <img id="vehicleImg" src="" alt="vehicle">
+        </div>
+      </div>
+      <div class="preview-box">
+        <div class="label">贴膜（Wrap）效果</div>
+        <div class="wrap-canvas-wrap">
+          <div class="wrap-layer">
+            <img class="base" id="tplImg" src="" alt="template">
+          </div>
+          <div class="arrow">➕</div>
+          <div class="wrap-layer">
+            <img class="base" id="wrapImg" src="" alt="wrap">
+          </div>
+        </div>
+        <div class="wrap-name" id="wrapName">选择右侧涂装</div>
+      </div>
+    </div>
+
+    <div class="gallery">
+      <h3>示例涂装 <span class="count" id="wrapCount"></span></h3>
+      <div class="wrap-grid" id="wrapGrid"></div>
+    </div>
+
+    <div class="usage-section">
+      <h3>📖 使用步骤</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">STEP 1</div>
+          <div class="step-text">下载对应车型的模板 PNG（UV 贴图）</div>
+        </div>
+        <div class="step">
+          <div class="step-num">STEP 2</div>
+          <div class="step-text">在 PS / Procreate 等软件中编辑白色区域，创作涂装</div>
+        </div>
+        <div class="step">
+          <div class="step-num">STEP 3</div>
+          <div class="step-text">保存为 512–1024px PNG（≤1MB），通过手机 App 或 USB 导入</div>
+        </div>
+        <div class="step">
+          <div class="step-num">STEP 4</div>
+          <div class="step-text">进入车机 Toybox → Paint Shop → Wraps 应用</div>
+        </div>
+      </div>
+
+      <div class="requirements">
+        <strong>⚠️ 文件要求：</strong>
+        PNG 格式 · 分辨率 512×512 ~ 1024×1024 · ≤1MB · 文件名限字母/数字/下划线/横杠/空格（≤30字符）· 每个来源最多 10 张。<br>
+        <strong>💾 USB 格式：</strong>exFAT / FAT32 / MS-DOS FAT / ext3 / ext4（不支持 NTFS），根目录建 <code style="background:#222;padding:2px 6px;border-radius:4px">Wraps</code> 文件夹放入 PNG。
+      </div>
+    </div>
+  </main>
+</div>
+
+<footer>
+  Data source: <a href="https://github.com/ivanmissu/custom-wraps" target="_blank">ivanmissu/custom-wraps</a> · Preview page for demo only
+</footer>
+
+<script>
+const VEHICLES = [
+  { id: 'cybertruck',               name: 'Cybertruck',                 sub: '' },
+  { id: 'model3',                   name: 'Model 3',                    sub: '老款' },
+  { id: 'model3-2024-base',         name: 'Model 3 (2024+)',            sub: 'Standard & Premium' },
+  { id: 'model3-2024-performance',  name: 'Model 3 (2024+)',            sub: 'Performance' },
+  { id: 'modely',                   name: 'Model Y',                    sub: '老款' },
+  { id: 'modely-2025-base',         name: 'Model Y (2025+)',            sub: 'Standard' },
+  { id: 'modely-2025-premium',      name: 'Model Y (2025+)',            sub: 'Premium' },
+  { id: 'modely-2025-performance',  name: 'Model Y (2025+)',            sub: 'Performance' },
+  { id: 'modely-l',                 name: 'Model Y L',                  sub: '' },
+  { id: 'models-2021',              name: 'Model S (2021+)',            sub: '' },
+  { id: 'models-2025-plaid',        name: 'Model S (2025+)',            sub: 'Plaid' },
+  { id: 'modelx-2021',              name: 'Model X (2021+)',            sub: '' },
+];
+
+// wraps list per vehicle (scanned from repo)
+const WRAPS = {
+  "cybertruck": ["Ani","Camo_Blue","Camo_Brown","Camo_Green","Camo_Pink","Camo_Sand","Camo_Snow","Camo_Stealth","Clay","Cosmic_Burst","Digital_Camo_Green","Digital_Camo_Snow","Digital_Camo_Stealth","Doge_Camo","Gradient_Black","Gradient_Burn","Gradient_Cotton_Candy","Gradient_Green","Gradient_Purple_Burn","Gradient_Sunburst","Graffiti_back","Graffiti_green","Graffiti_orange","Grandmas_Sofa","Houndstooth","Leopard","Mika","Rc_prototype","Retro","Rudi","Rust","Valentine","Woody","Xmas_Camo","Xmas_Lights","Xray"],
+  "model3": ["Acid_Drip","Ani","Apocalypse","Avocado_Green","Camo","Cosmic_Burst","Divide","Doge","Dot_Matrix","Ice_Cream","Leopard","Pixel_Art","Reindeer","Rudi","Sakura","Sketch","String_Lights","Valentine","Vintage_Gradient","Vintage_Stripes"],
+  "model3-2024-base": ["Acid_Drip","Ani","Apocalypse","Avocado_Green","Camo","Cosmic_Burst","Divide","Doge","Dot_Matrix","Ice_Cream","Leopard","Pixel_Art","Reindeer","Rudi","Sakura","Sketch","String_Lights","Valentine","Vintage_Gradient","Vintage_Stripes"],
+  "model3-2024-performance": ["Acid_Drip","Ani","Apocalypse","Avocado_Green","Camo","Cosmic_Burst","Divide","Doge","Dot_Matrix","Ice_Cream","Leopard","Pixel_Art","Reindeer","Rudi","Sakura","Sketch","String_Lights","Valentine","Vintage_Gradient","Vintage_Stripes"],
+  "models-2021": ["Acid_Drip","Ani","Apocalypse","Avocado_Green","Camo","Cosmic_Burst","Divide","Doge","Dot_Matrix","Ice_Cream","Leopard","Pixel_Art","Reindeer","Rudi","Sakura","Sketch","String_Lights","Valentine","Vintage_Gradient","Vintage_Stripes"],
+  "models-2025-plaid": ["Acid_Drip","Alpha_Mask","Ani","Apocalypse","Avocado_Green","Camo","Cosmic_Burst","Divide","Doge","Dot_Matrix","Ice_Cream","Leopard","Pixel_Art","Reindeer","Rudi","Sakura","Sketch","String_Lights","Valentine","Vintage_Gradient","Vintage_Stripes"],
+  "modelx-2021": ["Acid_Drip","Ani","Apocalypse","Avocado_Green","Camo","Cosmic_Burst","Divide","Doge","Dot_Matrix","Ice_Cream","Leopard","Pixel_Art","Reindeer","Rudi","Sakura","Sketch","String_Lights","Valentine","Vintage_Gradient","Vintage_Stripes"],
+  "modely": ["Acid_Drip","Ani","Apocalypse","Avocado_Green","Camo","Cosmic_Burst","Divide","Doge","Dot_Matrix","Ice_Cream","Leopard","Pixel_Art","Reindeer","Rudi","Sakura","Sketch","String_Lights","Valentine","Vintage_Gradient","Vintage_Stripes"],
+  "modely-2025-base": ["Acid_Drip","Ani","Apocalypse","Avocado_Green","Camo","Cosmic_Burst","Divide","Doge","Dot_Matrix","Ice_Cream","Leopard","Pixel_Art","Reindeer","Rudi","Sakura","Sketch","String_Lights","Valentine","Vintage_Gradient","Vintage_Stripes"],
+  "modely-2025-performance": ["Acid_Drip","Ani","Apocalypse","Avocado_Green","Camo","Cosmic_Burst","Divide","Doge","Dot_Matrix","Ice_Cream","Leopard","Pixel_Art","Reindeer","Rudi","Sakura","Sketch","String_Lights","Valentine","Vintage_Gradient","Vintage_Stripes"],
+  "modely-2025-premium": ["Acid_Drip","Ani","Apocalypse","Avocado_Green","Camo","Cosmic_Burst","Divide","Doge","Dot_Matrix","Drift_Chameleon","Ice_Cream","Leopard","Pixel_Art","Reindeer","Rudi","Sakura","Sketch","String_Lights","Valentine","Vintage_Gradient","Vintage_Stripes"],
+  "modely-l": ["Acid_Drip","Ani","Apocalypse","Avocado_Green","Camo","Cosmic_Burst","Divide","Doge","Dot_Matrix","Ice_Cream","Leopard","Pixel_Art","Reindeer","Rudi","Sakura","Sketch","String_Lights","Valentine","Vintage_Gradient","Vintage_Stripes"]
+};
+
+const carList = document.getElementById('carList');
+const carTitle = document.getElementById('carTitle');
+const vehicleImg = document.getElementById('vehicleImg');
+const tplImg = document.getElementById('tplImg');
+const wrapImg = document.getElementById('wrapImg');
+const wrapName = document.getElementById('wrapName');
+const wrapGrid = document.getElementById('wrapGrid');
+const wrapCount = document.getElementById('wrapCount');
+const downloadTpl = document.getElementById('downloadTpl');
+const viewFolder = document.getElementById('viewFolder');
+
+function p(...parts) { return parts.join('/'); }
+function base(id) { return id + '/'; }
+
+function buildCarList() {
+  carList.innerHTML = '';
+  VEHICLES.forEach(v => {
+    const li = document.createElement('li');
+    li.className = 'car-item';
+    li.dataset.id = v.id;
+    li.innerHTML = `<img class="thumb" src="${p(v.id,'vehicle_image.png')}" loading="lazy" onerror="this.style.display='none'"><div><div style="font-weight:500;font-size:0.92rem">${v.name}</div><div style="font-size:0.75rem;color:#888">${v.sub||' '}</div></div>`;
+    li.addEventListener('click', () => selectCar(v.id));
+    carList.appendChild(li);
+  });
+}
+
+function getWraps(id) {
+  return WRAPS[id] || [];
+}
+
+let currentWraps = [];
+let currentCar = null;
+
+function selectCar(id) {
+  document.querySelectorAll('.car-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
+  currentCar = VEHICLES.find(v => v.id === id);
+  const title = currentCar.sub ? `${currentCar.name} <span style="color:#888;font-weight:400;font-size:1.1rem">${currentCar.sub}</span>` : currentCar.name;
+  carTitle.innerHTML = title;
+  vehicleImg.src = p(id,'vehicle_image.png');
+  tplImg.src = p(id,'template.png');
+  downloadTpl.href = p(id,'template.png');
+  downloadTpl.setAttribute('download', `${id}-template.png`);
+  viewFolder.href = id + '/';
+
+  currentWraps = getWraps(id);
+  wrapCount.textContent = `· ${currentWraps.length} 张`;
+  wrapGrid.innerHTML = '';
+  currentWraps.forEach((w, idx) => {
+    const card = document.createElement('div');
+    card.className = 'wrap-card';
+    card.dataset.name = w;
+    const src = p(id,'example', w + '.png');
+    card.innerHTML = `<img class="wrap-thumb" src="${src}" loading="lazy" alt="${w}" onerror="this.style.background='#222';this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%22 y=%2254%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%229%22>IMG</text></svg>'"><div class="name">${w.replace(/_/g,' ')}</div>`;
+    card.addEventListener('click', () => selectWrap(idx, src, w, card));
+    wrapGrid.appendChild(card);
+  });
+  // auto-select first
+  if (currentWraps.length) {
+    const first = wrapGrid.children[0];
+    first.click();
+  } else {
+    wrapImg.src = '';
+    wrapName.textContent = '无示例';
+  }
+}
+
+function selectWrap(idx, src, name, cardEl) {
+  document.querySelectorAll('.wrap-card').forEach(el => el.classList.remove('active'));
+  cardEl.classList.add('active');
+  wrapImg.src = src;
+  wrapName.textContent = name.replace(/_/g, ' ');
+}
+
+buildCarList();
+selectCar('modely-2025-premium');
+// Auto-select the new drift wrap if present
+setTimeout(() => {
+  const cards = document.querySelectorAll('.wrap-card');
+  for (const c of cards) {
+    if (c.dataset.name === 'Drift_Chameleon') { c.click(); break; }
+  }
+}, 100);
+</script>
+</body>
+</html>
